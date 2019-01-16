@@ -59,6 +59,12 @@ rgw usage max shards = 32
 rgw usage max user shards = 1
 log file = /var/log/ceph/client.rgw.%s.log
 rgw frontends = %s port=0.0.0.0:%s
+rgw enable static website = true
+
+[client.rgw.%s.static]
+rgw dns name = %s
+rgw dns s3website name = %s.static
+rgw enable apis = s3, s3website
 `
 
 	monMapPath            = "/etc/ceph/monmap"

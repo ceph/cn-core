@@ -97,7 +97,7 @@ func generateUUID() string {
 func generateCephConf(hostname, rgwEngine, rgwPort string) (string, string) {
 	fsid := generateUUID()
 
-	return fmt.Sprintf(cephConfTemplate, fsid, hostname, hostname, hostname, hostname, rgwEngine, rgwPort), fsid
+	return fmt.Sprintf(cephConfTemplate, fsid, hostname, hostname, hostname, hostname, rgwEngine, rgwPort, hostname, hostname, hostname), fsid
 }
 
 func writeCephConf(hostname, cephConfFilePath string) string {

@@ -71,8 +71,15 @@ rgw usage max shards = 32
 rgw usage max user shards = 1
 log file = /var/log/ceph/client.rgw.toto.log
 rgw frontends = civetweb port=0.0.0.0:8000
+rgw enable static website = true
+
+[client.rgw.toto.static]
+rgw dns name = toto
+rgw dns s3website name = toto.static
+rgw enable apis = s3, s3website
+rgw resolve cname = true
 `
-	assert.Equal(t, expectedCephConf, fmt.Sprintf(cephConfTemplate, fsid, hostname, hostname, hostname, hostname, rgwEngine, rgwPort), "Ceph configuration file generation error!")
+	assert.Equal(t, expectedCephConf, fmt.Sprintf(cephConfTemplate, fsid, hostname, hostname, hostname, hostname, rgwEngine, rgwPort, hostname, hostname, hostname), "Ceph configuration file generation error!")
 }
 
 // func TestTuneMemory(t *testing.T) {
