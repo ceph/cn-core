@@ -5,7 +5,7 @@ set -ex
 #############
 # VARIABLES #
 #############
-NB_TAGS=$(git rev-list --tags)
+NB_TAGS=$(git rev-list --tags|wc -l)
 # do not request the penultimate tag if they are not tags or just one
 if [[ "$NB_TAGS" -gt "1" ]]; then
     PENULTIMATE_TAG=$(git describe --abbrev=0 --tags "$(git rev-list --tags --skip=1 --max-count=1)") # this is n-1 tag
@@ -57,7 +57,6 @@ function commit_changed_readme {
 function compile_cn_core {
     make prepare
     make
-    CN_VERSION=$(./cn-core version | awk '{print $3}')
 }
 
 function docker_build {
@@ -74,12 +73,6 @@ function get_cn {
     chmod +x cn
 }
 
-function docker_push {
-    docker login -u="leseb" -p="A8LHJJ1Kph6JYpZNDs7fLOYtitLhSIlQwAIeV7RvgleJJwPf/EUk647GSKMN8yij9kJLgJn/5uxneknBI6Qqw/Cjh8XN+x3xUhbi9gMfWJQ=" quay.io
-    docker tag cn-core quay.io/ceph/cn-core:"${CN_VERSION,,}"
-    docker push quay.io/ceph/cn-core:"${CN_VERSION,,}"
-}
-
 
 ########
 # MAIN #
@@ -89,7 +82,6 @@ if [[ "$1" == "compile-run-cn-core" ]]; then
     get_cn
     docker_build
     run_cn
-    docker_push
 fi
 
 if [[ "$1" == "tag-release" ]]; then
@@ -99,7 +91,7 @@ if [[ "$1" == "tag-release" ]]; then
         git checkout master
         setup_git
         commit_spec_file
-        commit_changed_readme
+        # commit_changed_readme
         # commit_bash_completion # not implemented yet
     else
         echo "Not running on a tag, nothing to do!"

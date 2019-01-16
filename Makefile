@@ -26,15 +26,12 @@ endif
 
 prepare:
 	dep ensure
-	cd cmd; go test -timeout 1m -count 5
-
-darwin:
-	make GOOS=darwin GOARCH:=amd64
+	cd cmd; GOOS=linux go test -timeout 1m
 
 linux-%:
 	make GOOS=linux GOARCH:=$*
 
-release: darwin linux-amd64 linux-arm64
+release: linux-amd64
 
 clean:
 	rm -f cn-core$(CN_CORE_EXTENSION) cn-core &>/dev/null || true

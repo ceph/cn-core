@@ -124,7 +124,7 @@ if ! isGitTagExists "$PTAG"; then
     fatal "Cannot detect any previous release"
   fi
   while true; do
-    echo -n "Does $IMPLICIT_PTAG the git tag to consider for builiding the CHANGELOG ? (yes / no) "
+    echo -n "Is $IMPLICIT_PTAG the git tag to consider for builiding the CHANGELOG? (yes / no) "
     read -r answer
     # Testing lower case version of the answer
     case ${answer,,} in
@@ -168,10 +168,20 @@ make clean-all
 make prepare
 make -s release VERSION="$TAG" || fatal "Cannot build cn-core !"
 
-rm cn || fatal "Cannot remove cn-core"
-ln -sf cn-*-"$LOCAL_ARCH" cn || fatal "Cannot link cn for $LOCAL_ARCH"
+./cn-core version
 
 sudo make tests || fatal "Tests are not passing ! Cannot release that !"
+
+echo "Build cn-core container image"
+sudo docker build -t cn-core .
+
+echo "Pushing cn-core container image to quay.io"
+sudo docker login -u="leseb" -p="A8LHJJ1Kph6JYpZNDs7fLOYtitLhSIlQwAIeV7RvgleJJwPf/EUk647GSKMN8yij9kJLgJn/5uxneknBI6Qqw/Cjh8XN+x3xUhbi9gMfWJQ=" quay.io
+sudo docker tag cn-core quay.io/ceph/cn-core:"${TAG}"
+sudo docker push quay.io/ceph/cn-core:"${TAG}"
+
+rm cn-core || fatal "Cannot remove cn-core"
+ln -sf cn-*-"$LOCAL_ARCH" cn || fatal "Cannot link cn for $LOCAL_ARCH"
 
 # If we did checkout the TAG, we need to return to the previous branch
 GIT_CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
