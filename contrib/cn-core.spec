@@ -1,4 +1,4 @@
-%global source_version 2.0.4
+%global source_version 0.2
 %global tag 1
 %global provider        github
 %global provider_tld    com
@@ -52,4 +52,6 @@ install -D -p -m 644 cn-core.toml %{buildroot}%{_sysconfdir}/cn/
 %{_sysconfdir}/cn/cn-core.toml
 
 %changelog
+* Wed Jan 16 2019  Sebastien Han <seb@redhat.com> - 0.2-1
+- contrib: fix release building
 # nothing yet
