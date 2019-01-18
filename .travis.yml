@@ -17,8 +17,6 @@ branches:
 
 before_install:
   - docker --version
-  # - echo "$DOCKER_HUB_PASSWORD" | docker login -u leseb --password-stdin
-  # - docker login -u="leseb" -p="A8LHJJ1Kph6JYpZNDs7fLOYtitLhSIlQwAIeV7RvgleJJwPf/EUk647GSKMN8yij9kJLgJn/5uxneknBI6Qqw/Cjh8XN+x3xUhbi9gMfWJQ=" quay.io
   - go get -u github.com/golang/dep/cmd/dep
 
 jobs:
@@ -29,7 +27,3 @@ jobs:
     - stage: build a new release if running on a tag
       script: ./contrib/travis.sh tag-release
       if: tag IS present
-
-env:
-  global:
-    secure: Q7ilx50Ch5DPNiSfTpEwrlrzGOXTFaKVoaGdKWHoxj5zf2+G3/pggCtW3ZTeuof0AtHjsnfG0f20Y+S+pwo9q+ksTa52UdUIBOXZZVeovGfQAaH23E+gxJwxHYdWwhSJAzpRzFKgr7XoZO+lwMFYun0sBCTk8lLG/nEMw37t3ks=
