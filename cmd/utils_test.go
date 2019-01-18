@@ -30,11 +30,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGenerateHeader(t *testing.T) {
-	header := generateHeader()
-	assert.Equal(t, 12, len(header), "Wrong header length!")
-}
-
 func TestGenerateSecret(t *testing.T) {
 	key := generateSecret()
 	assert.Equal(t, 40, len(key), "Wrong keyring length!")
