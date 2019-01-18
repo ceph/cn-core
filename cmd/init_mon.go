@@ -49,6 +49,9 @@ log file = /dev/null
 osd pool default size = 1
 osd data = /var/lib/ceph/osd/ceph-0
 osd objectstore = bluestore
+osd memory target = %d
+osd memory base = %d
+osd memory cache min = %d
 
 [client.rgw.%s]
 rgw dns name = %s
@@ -98,6 +101,8 @@ func bootstrapMon() {
 
 		// write ceph.conf
 		fsid := writeCephConf(hostname, cephConfFilePath)
+
+		// chown ceph.conf
 		err = os.Chown(cephConfFilePath, cephUID, cephGID)
 		if err != nil {
 			log.Fatal(err)
