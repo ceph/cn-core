@@ -40,7 +40,7 @@ const (
 [global]
 fsid = %s
 mon initial members = %s
-mon host = 127.0.0.1
+mon host = v2:127.0.0.1:3300/0
 osd crush chooseleaf type = 0
 osd journal size = 100
 public network = 0.0.0.0/0
@@ -66,7 +66,7 @@ rgw frontends = %s port=0.0.0.0:%s
 	monIP                 = "127.0.0.1"
 	monListenIPPort       = monIP + ":" + monPort
 	rgwEngine             = "civetweb"
-	monPort               = "6789"
+	monPort               = "3300"
 )
 
 var (
