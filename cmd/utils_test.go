@@ -47,7 +47,7 @@ func TestGenerateCephConf(t *testing.T) {
 [global]
 fsid = 7ff73783-cec6-4ace-b655-a6bc4f2532a8
 mon initial members = toto
-mon host = 127.0.0.1
+mon host = v2:127.0.0.1:3300/0
 osd crush chooseleaf type = 0
 osd journal size = 100
 public network = 0.0.0.0/0
