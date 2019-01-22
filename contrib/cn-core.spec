@@ -1,4 +1,4 @@
-%global source_version 0.2
+%global source_version 0.3
 %global tag 1
 %global provider        github
 %global provider_tld    com
@@ -52,6 +52,16 @@ install -D -p -m 644 cn-core.toml %{buildroot}%{_sysconfdir}/cn/
 %{_sysconfdir}/cn/cn-core.toml
 
 %changelog
+* Tue Jan 22 2019  Sebastien Han <seb@redhat.com> - 0.3-1
+- Merge pull request #7 from ceph/memory-tuning
+- osd: implement memory limit
+- main: use log.Fatal
+- Merge pull request #9 from ceph/mon-msgr2
+- mon: enable msgr2
+- Merge pull request #5 from ceph/improve-key-gen
+- mon: simplify key generation
+- travis: remove leftovers
+- Packaging: Update specfile version to v0.2
 * Wed Jan 16 2019  Sebastien Han <seb@redhat.com> - 0.2-1
 - contrib: fix release building
 # nothing yet
