@@ -23,8 +23,7 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -58,13 +57,11 @@ func Main(version string) {
 	cnCoreVersion = version
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
 func init() {
-
 	rootCmd.AddCommand(
 		cliInitCluster(),
 		cliVersionCnCore(),

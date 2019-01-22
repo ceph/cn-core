@@ -36,6 +36,10 @@ var (
 	validValueDaemon = []string{"mon", "mgr", "osd", "rgw", "dash", "health"}
 )
 
+const (
+	cnMemMin uint64 = 512 // minimum amount of memory in MB to run cn-core
+)
+
 // cliInitCluster is the Cobra CLI call
 func cliInitCluster() *cobra.Command {
 	cmd := &cobra.Command{
@@ -57,6 +61,12 @@ func cliInitCluster() *cobra.Command {
 
 // initCluster initialize the Ceph cluster
 func initCluster(cmd *cobra.Command, args []string) {
+	memLimit := getMemLimit()
+	err := validateAvaibleMemory(cnMemMin, memLimit)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	switch daemon {
 	case "mon":
 		bootstrapMon()
