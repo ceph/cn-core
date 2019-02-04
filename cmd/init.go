@@ -25,6 +25,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -37,7 +38,8 @@ var (
 )
 
 const (
-	cnMemMin uint64 = 512 // minimum amount of memory in MB to run cn-core
+	cnMemMin         uint64 = 512         // minimum amount of memory in MB to run cn-core
+	bluestoreSizeMin uint64 = 10737418240 // minimum amount of space for BlueStore in bytes
 )
 
 // cliInitCluster is the Cobra CLI call
@@ -65,6 +67,14 @@ func initCluster(cmd *cobra.Command, args []string) {
 	err := validateAvaibleMemory(cnMemMin, memLimit)
 	if err != nil {
 		log.Fatal(err)
+	}
+	// validate available bluestore block size, if the user has provided a dedicated directory
+	osdPathEnv := os.Getenv("OSD_PATH")
+	if len(osdPathEnv) > 0 {
+		err := validateAvailableBluestoreSize(bluestoreSizeMin, osdPathEnv)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	switch daemon {

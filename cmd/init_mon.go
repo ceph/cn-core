@@ -52,6 +52,7 @@ osd objectstore = bluestore
 osd memory target = %d
 osd memory base = %d
 osd memory cache min = %d
+bluestore_block_size = %d
 
 [client.rgw.%s]
 rgw dns name = %s

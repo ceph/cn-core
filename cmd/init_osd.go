@@ -23,10 +23,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 )
 
 const (
@@ -43,22 +45,116 @@ func bootstrapOsd() {
 	monDataPath := cephDataPath + "/mon/ceph-" + hostname
 	monKeyringPath := monDataPath + "/keyring"
 
+	// check for block device
+	osdDeviceEnv := os.Getenv("OSD_DEVICE")
+	bluestoreBlockSizeEnv := os.Getenv("BLUESTORE_BLOCK_SIZE")
+	if len(osdDeviceEnv) > 0 {
+
+		log.Println("init osd: checking for block device")
+
+		testDev, err := getFileType(osdDeviceEnv)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if testDev == "blockdev" {
+			if len(bluestoreBlockSizeEnv) > 0 {
+				size := toBytes(bluestoreBlockSizeEnv)
+				// override the default value with the size indicated by the BLUESTORE_BLOCK_SIZE environment variable
+				sedFile(cephConfFilePath, "bluestore_block_size = "+strconv.FormatUint(bluestoreSizeMin, 10), "bluestore_block_size = "+string(size))
+			} else {
+				// using blockdev command to fetch the actual size of the block device
+				cmd := exec.Command("blockdev", "--getsize64", osdDeviceEnv)
+
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("The command was: %s\n", cmd.Args)
+					fmt.Printf("The error was: %s\n", out)
+					log.Fatal(err)
+				} else {
+					// override the default value with the actual size of the block device available
+					sedFile(cephConfFilePath, "bluestore_block_size = "+strconv.FormatUint(bluestoreSizeMin, 10), "bluestore_block_size = "+string(out))
+				}
+			}
+		} else {
+			log.Fatalf("Invalid %s, only block device is supported", osdDeviceEnv)
+		}
+
+	}
+
 	// if there is no key, we assume there is no monitor
 	if _, err := os.Stat(osdKeyringPath); os.IsNotExist(err) {
 		// run prereq
 		osdPreReq()
 
-		// generate osd keyring
-		generateOsdKeyring(monKeyringPath, osdKeyringPath)
+		if len(osdDeviceEnv) > 0 {
+			// export client.bootstrap-osd keyring to bootstrap-osd/ceph.keyring file
+			cmd := exec.Command("ceph", "auth", "export", "client.bootstrap-osd", "-o", "/var/lib/ceph/bootstrap-osd/ceph.keyring")
 
-		// chown osd keyring
-		err = os.Chown(osdKeyringPath, cephUID, cephGID)
-		if err != nil {
-			log.Fatal(err)
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Printf("The command was: %s\n", cmd.Args)
+				fmt.Printf("The error was: %s\n", out)
+				log.Fatal(err)
+			}
+
+			log.Println("init osd: preparing block device")
+
+			cmd = exec.Command("ceph-volume", "lvm", "prepare", "--data", osdDeviceEnv)
+
+			out, err = cmd.CombinedOutput()
+			if err != nil {
+				fmt.Printf("The command was: %s\n", cmd.Args)
+				fmt.Printf("The error was: %s\n", out)
+				log.Fatal(err)
+			}
+		} else {
+			// generate osd keyring
+			generateOsdKeyring(monKeyringPath, osdKeyringPath)
+
+			// chown osd keyring
+			err = os.Chown(osdKeyringPath, cephUID, cephGID)
+			if err != nil {
+				log.Fatal(err)
+			}
+			// populate osd store
+			osdMkfs(monInitialKeyringPath)
 		}
+	}
 
-		// populate osd store
-		osdMkfs(monInitialKeyringPath)
+	if len(osdDeviceEnv) > 0 {
+		cmd := exec.Command("ceph-volume", "lvm", "list", "--format", "json")
+
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("The command was: %s\n", cmd.Args)
+			fmt.Printf("The error was: %s\n", out)
+			log.Fatal(err)
+		} else {
+			// fetch the osd fsid value
+			osdID := "0"
+			var result map[string]interface{}
+			json.Unmarshal([]byte(out), &result)
+			result1 := result[osdID].([]interface{})
+			result2 := result1[0].(map[string]interface{})
+			result3 := result2["tags"].(map[string]interface{})
+			osdFSID := result3["ceph.osd_fsid"]
+			osdFSIDstr, ok := osdFSID.(string)
+			if ok {
+				log.Println("init osd: activating block device")
+
+				cmd := exec.Command("ceph-volume", "lvm", "activate", "--no-systemd", "--bluestore", "0", osdFSIDstr)
+
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("The command was: %s\n", cmd.Args)
+					fmt.Printf("The error was: %s\n", out)
+					log.Fatal(err)
+				}
+
+			} else {
+				log.Fatal("Could not initiate block device activation. Failed to retrieve osd_fsid.")
+			}
+		}
 	}
 
 	// chown osd data path
