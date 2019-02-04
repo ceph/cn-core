@@ -40,8 +40,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
+	"github.com/alecthomas/units"
 	"github.com/gofrs/uuid"
 )
 
@@ -90,7 +92,7 @@ func generateCephConf(hostname, rgwEngine, rgwPort string) (string, string) {
 	memAvailable := getAvailableRAM()
 	osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin := tuneMemory(memAvailable)
 
-	return fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, hostname, hostname, hostname, rgwEngine, rgwPort), fsid
+	return fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, hostname, hostname, hostname, rgwEngine, rgwPort), fsid
 }
 
 func writeCephConf(hostname, cephConfFilePath string) string {
@@ -372,5 +374,70 @@ func validateAvaibleMemory(cnMemMin uint64, memLimit int) error {
 		return errors.New("init: run me with at least 512mb of ram")
 	}
 
+	return nil
+}
+
+func toBytes(value string) int64 {
+	var bytes units.Base2Bytes
+	var err error
+	bytes, err = units.ParseBase2Bytes(value)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return int64(bytes)
+}
+
+// getFileType checks wether a specified data is directory, a block device or something else
+// function borrowed from https://github.com/andrewsykim/kubernetes/blob/2deb7af9b248a7ddc00e61fcd08aa9ea8d2d09cc/pkg/util/mount/mount_linux.go#L416
+func getFileType(pathname string) (string, error) {
+	finfo, err := os.Stat(pathname)
+	if os.IsNotExist(err) {
+		return "notfound", fmt.Errorf("path %q does not exist", pathname)
+	}
+	// err in call to os.Stat
+	if err != nil {
+		return "error", err
+	}
+
+	mode := finfo.Sys().(*syscall.Stat_t).Mode
+	switch mode & syscall.S_IFMT {
+	case syscall.S_IFSOCK:
+		return "socket", nil
+	case syscall.S_IFBLK:
+		return "blockdev", nil
+	case syscall.S_IFCHR:
+		return "chardev", nil
+	case syscall.S_IFDIR:
+		return "directory", nil
+	case syscall.S_IFREG:
+		return "file", nil
+	}
+
+	return "error", fmt.Errorf("only recognize file, directory, socket, block device and character device")
+}
+
+func freeDiskSpace(path string) (free uint64, err error) {
+	s := syscall.Statfs_t{}
+	if err := syscall.Statfs(path, &s); err != nil {
+		return 0, err
+	}
+	free = uint64(s.Bsize) * s.Bavail
+	return free, nil
+}
+
+func bToGb(b uint64) uint64 {
+	return b / 1024 / 1024 / 1024
+}
+
+func validateAvailableBluestoreSize(bluestoreSizeMin uint64, path string) error {
+	// fetch the available space provided
+	free, err := freeDiskSpace(path)
+	if err != nil {
+		log.Fatalf("init: %s %s", err, path)
+	}
+	// available space must be greater than default bluestore block size
+	if free < bluestoreSizeMin {
+		return fmt.Errorf("init: Failed to bootstrap, need a minimum of %dGb space for BlueStore, but available free space is %dGb", bToGb(bluestoreSizeMin), bToGb(free))
+	}
 	return nil
 }
