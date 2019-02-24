@@ -157,12 +157,6 @@ func bootstrapOsd() {
 		}
 	}
 
-	// chown osd data path
-	err = chownR(osdDataPath, cephUID, cephGID)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// start ceph osd!
 	osdStart()
 }
@@ -197,7 +191,7 @@ func generateOsdKeyring(monKeyringPath, osdKeyringPath string) {
 func osdMkfs(monInitialKeyringPath string) {
 	log.Println("init osd: populating osd store")
 
-	cmd := exec.Command("ceph-osd", "--conf", cephConfFilePath, "--mkfs", "-i", "0", "--osd-data", osdDataPath)
+	cmd := exec.Command("ceph-osd", "--setuser", "ceph", "--setgroup", "ceph", "--conf", cephConfFilePath, "--mkfs", "-i", "0", "--osd-data", osdDataPath)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -210,7 +204,7 @@ func osdMkfs(monInitialKeyringPath string) {
 func osdStart() {
 	log.Println("init osd: running osd")
 
-	cmd := exec.Command("ceph-osd", "--setuser", "ceph", "--setgroup", "-i", "0")
+	cmd := exec.Command("ceph-osd", "--setuser", "ceph", "--setgroup", "ceph", "-i", "0")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
