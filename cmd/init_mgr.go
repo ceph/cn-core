@@ -99,7 +99,7 @@ func generateMgrKeyring(hostname, mgrKeyringPath string) {
 func mgrStart(hostname string) {
 	log.Println("init mgr: running manager")
 
-	cmd := exec.Command("ceph-mgr", "--setuser", "ceph", "--setgroup", "-i", hostname)
+	cmd := exec.Command("ceph-mgr", "--setuser", "ceph", "--setgroup", "ceph", "-i", hostname)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
