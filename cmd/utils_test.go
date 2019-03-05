@@ -47,6 +47,7 @@ func TestGenerateCephConf(t *testing.T) {
 	osdMemoryBase := 2
 	osdMemoryCacheMin := 3
 	bluestoreSizeMin := 4
+	rgwName := "toto"
 	expectedCephConf := `
 [global]
 fsid = 7ff73783-cec6-4ace-b655-a6bc4f2532a8
@@ -75,7 +76,7 @@ rgw usage max user shards = 1
 log file = /var/log/ceph/client.rgw.toto.log
 rgw frontends = civetweb port=0.0.0.0:8000
 `
-	assert.Equal(t, expectedCephConf, fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, hostname, hostname, hostname, rgwEngine, rgwPort), "Ceph configuration file generation error!")
+	assert.Equal(t, expectedCephConf, fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, rgwName, rgwName, rgwName, rgwEngine, rgwPort), "Ceph configuration file generation error!")
 }
 
 func TestValidateAvaibleMemory(t *testing.T) {

@@ -75,6 +75,7 @@ rgw frontends = %s port=0.0.0.0:%s
 
 var (
 	rgwPort = "8000"
+	rgwName = ""
 )
 
 func bootstrapMon() {
@@ -89,6 +90,14 @@ func bootstrapMon() {
 		rgwPort = rgwPortEnv
 	}
 
+	// Read ENV and search for a value for rgwName
+	rgwNameEnv := os.Getenv("RGW_NAME")
+	if len(rgwNameEnv) > 0 {
+		rgwName = rgwNameEnv
+	} else {
+		rgwName = hostname
+	}
+
 	monDataPath := cephDataPath + "/mon/ceph-" + hostname
 	monKeyringPath := monDataPath + "/keyring"
 
@@ -101,7 +110,7 @@ func bootstrapMon() {
 		writeKeyring(monInitialKeyringPath)
 
 		// write ceph.conf
-		fsid := writeCephConf(hostname, cephConfFilePath)
+		fsid := writeCephConf(hostname, rgwName, cephConfFilePath)
 
 		// chown ceph.conf
 		err = os.Chown(cephConfFilePath, cephUID, cephGID)

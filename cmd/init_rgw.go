@@ -43,9 +43,9 @@ func bootstrapRgw() {
 
 	monDataPath := cephDataPath + "/mon/ceph-" + hostname
 	monKeyringPath := monDataPath + "/keyring"
-	rgwDataPath := cephDataPath + "/radosgw/ceph-rgw." + hostname
+	rgwDataPath := cephDataPath + "/radosgw/ceph-rgw." + rgwName
 	rgwKeyringPath := rgwDataPath + "/keyring"
-	rgwHost := hostname + ":" + rgwPort
+	rgwHost := rgwName + ":" + rgwPort
 
 	// if there is no key, we assume there is no monitor
 	if _, err := os.Stat(rgwKeyringPath); os.IsNotExist(err) {
@@ -53,7 +53,7 @@ func bootstrapRgw() {
 		rgwPreReq(rgwDataPath)
 
 		// generate rgw keyring
-		generateRgwKeyring(hostname, rgwKeyringPath)
+		generateRgwKeyring(rgwName, rgwKeyringPath)
 
 		// chown rgw keyring
 		err = os.Chown(rgwKeyringPath, cephUID, cephGID)
@@ -63,7 +63,7 @@ func bootstrapRgw() {
 	}
 
 	// start rgw!
-	rgwStart(hostname, rgwKeyringPath)
+	rgwStart(rgwName, rgwKeyringPath)
 
 	// create cn user
 	if _, err := os.Stat(cnUserDetailsFile); os.IsNotExist(err) {
@@ -108,10 +108,10 @@ func rgwPreReq(rgwDataPath string) {
 	}
 }
 
-func generateRgwKeyring(hostname, rgwKeyringPath string) {
+func generateRgwKeyring(rgwName, rgwKeyringPath string) {
 	log.Println("init rgw: generating rgw keyring")
 
-	cmd := exec.Command("ceph", "auth", "get-or-create", "client.rgw."+hostname, "mon", `allow rw`, "osd", `allow rwx`, "-o", rgwKeyringPath)
+	cmd := exec.Command("ceph", "auth", "get-or-create", "client.rgw."+rgwName, "mon", `allow rw`, "osd", `allow rwx`, "-o", rgwKeyringPath)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -121,10 +121,10 @@ func generateRgwKeyring(hostname, rgwKeyringPath string) {
 	}
 }
 
-func rgwStart(hostname, rgwKeyringPath string) {
+func rgwStart(rgwName, rgwKeyringPath string) {
 	log.Println("init rgw: running rgw on port " + rgwPort)
 
-	cmd := exec.Command("radosgw", "--setuser", "ceph", "--setgroup", "ceph", "-n", "client.rgw."+hostname, "-k", rgwKeyringPath)
+	cmd := exec.Command("radosgw", "--setuser", "ceph", "--setgroup", "ceph", "-n", "client.rgw."+rgwName, "-k", rgwKeyringPath)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

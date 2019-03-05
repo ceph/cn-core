@@ -87,18 +87,18 @@ func generateUUID() string {
 	return uuid.String()
 }
 
-func generateCephConf(hostname, rgwEngine, rgwPort string) (string, string) {
+func generateCephConf(hostname, rgwName, rgwEngine, rgwPort string) (string, string) {
 	fsid := generateUUID()
 	memAvailable := getAvailableRAM()
 	osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin := tuneMemory(memAvailable)
 
-	return fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, hostname, hostname, hostname, rgwEngine, rgwPort), fsid
+	return fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, rgwName, rgwName, rgwName, rgwEngine, rgwPort), fsid
 }
 
-func writeCephConf(hostname, cephConfFilePath string) string {
+func writeCephConf(hostname, rgwName, cephConfFilePath string) string {
 	log.Println("init mon: writing ceph configuration file")
 
-	cephConf, fsid := generateCephConf(hostname, rgwEngine, rgwPort)
+	cephConf, fsid := generateCephConf(hostname, rgwName, rgwEngine, rgwPort)
 	cephConfBytes := []byte(cephConf)
 
 	err := ioutil.WriteFile(cephConfFilePath, cephConfBytes, 0644)
