@@ -189,7 +189,7 @@ func configureClients(client string, arg ...string) {
 
 		log.Println("init dashboard: configure dashboard")
 		path := dashboardDir + "static/js/base.js"
-		sedFile(path, "ENDPOINT", dashExposedIP+":"+rgwPort)
+		sedFile(path, "ENDPOINT", "http://"+dashExposedIP+":"+rgwPort)
 		sedFile(path, "ACCESS_KEY", cnAccessKey)
 		sedFile(path, "SECRET_KEY", cnSecretKey)
 
