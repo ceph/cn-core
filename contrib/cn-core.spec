@@ -1,4 +1,4 @@
-%global source_version 0.4
+%global source_version 0.5
 %global tag 1
 %global provider        github
 %global provider_tld    com
@@ -52,6 +52,10 @@ install -D -p -m 644 cn-core.toml %{buildroot}%{_sysconfdir}/cn/
 %{_sysconfdir}/cn/cn-core.toml
 
 %changelog
+* Wed Mar 13 2019  Sebastien Han <seb@redhat.com> - 0.5-1
+- utils: fix dashboard configuration
+- daemon startup CLI: fix flags
+- Packaging: Update specfile version to v0.4
 * Thu Feb 14 2019  Sebastien Han <seb@redhat.com> - 0.4-1
 - mon: updates mon host address
 - Adds ceph-volume support
