@@ -62,14 +62,14 @@ rgw usage log flush threshold = 1
 rgw usage max shards = 32
 rgw usage max user shards = 1
 log file = /var/log/ceph/client.rgw.%s.log
-rgw frontends = %s port=0.0.0.0:%s
+rgw frontends = %s endpoint=0.0.0.0:%s
 `
 
 	monMapPath            = "/etc/ceph/monmap"
 	monInitialKeyringPath = "/etc/ceph/initial-mon-keyring"
 	monIP                 = "127.0.0.1"
 	monListenIPPort       = monIP + ":" + monPort
-	rgwEngine             = "civetweb"
+	rgwEngine             = "beast"
 	monPort               = "3300"
 )
 
