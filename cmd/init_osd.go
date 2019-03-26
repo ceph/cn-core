@@ -32,8 +32,15 @@ import (
 )
 
 const (
-	osdDataPath    = cephDataPath + "/osd/ceph-0"
-	osdKeyringPath = osdDataPath + "/keyring"
+	osdDataPath            = cephDataPath + "/osd/ceph-0"
+	osdKeyringPath         = osdDataPath + "/keyring"
+	osdCrushChooseleafType = "0"
+	osdJournalSize         = "100"
+	osdObjectstore         = "bluestore"
+)
+
+var (
+	bluestoreBlockSize = "10737418240"
 )
 
 func bootstrapOsd() {
@@ -60,7 +67,7 @@ func bootstrapOsd() {
 			if len(bluestoreBlockSizeEnv) > 0 {
 				size := toBytes(bluestoreBlockSizeEnv)
 				// override the default value with the size indicated by the BLUESTORE_BLOCK_SIZE environment variable
-				sedFile(cephConfFilePath, "bluestore_block_size = "+strconv.FormatUint(bluestoreSizeMin, 10), "bluestore_block_size = "+string(size))
+				bluestoreBlockSize = string(size)
 			} else {
 				// using blockdev command to fetch the actual size of the block device
 				cmd := exec.Command("blockdev", "--getsize64", osdDeviceEnv)
@@ -72,7 +79,7 @@ func bootstrapOsd() {
 					log.Fatal(err)
 				} else {
 					// override the default value with the actual size of the block device available
-					sedFile(cephConfFilePath, "bluestore_block_size = "+strconv.FormatUint(bluestoreSizeMin, 10), "bluestore_block_size = "+string(out))
+					bluestoreBlockSize = string(out)
 				}
 			}
 		} else {
@@ -203,8 +210,18 @@ func osdMkfs(monInitialKeyringPath string) {
 
 func osdStart() {
 	log.Println("init osd: running osd")
+	memAvailable := getAvailableRAM()
+	osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin := tuneMemory(memAvailable)
 
-	cmd := exec.Command("ceph-osd", "--setuser", "ceph", "--setgroup", "ceph", "-i", "0")
+	cmd := exec.Command("ceph-osd", "--setuser", "ceph", "--setgroup", "ceph", "-i", "0",
+		"--osd-crush-chooseleaf-type", osdCrushChooseleafType,
+		"--osd-journal-size", osdJournalSize,
+		"--osd-pool-default-size", osdPoolDefaultSize,
+		"--osd-objectstore", osdObjectstore,
+		"--osd-memory-target", strconv.FormatUint(osdMemoryTarget, 10),
+		"--osd-memory-base", strconv.FormatUint(osdMemoryBase, 10),
+		"--osd-memory-cache-min", strconv.FormatUint(osdMemoryCacheMin, 10),
+		"--bluestore-block-size", bluestoreBlockSize)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

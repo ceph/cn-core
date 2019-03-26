@@ -39,30 +39,11 @@ const (
 	cephConfTemplate = `
 [global]
 fsid = %s
-mon initial members = %s
 mon host = [v2:127.0.0.1:3300,v1:127.0.0.1:6789]
-osd crush chooseleaf type = 0
-osd journal size = 100
 public network = 0.0.0.0/0
 cluster network = 0.0.0.0/0
 log file = /dev/null
-osd pool default size = 1
-osd data = /var/lib/ceph/osd/ceph-0
-osd objectstore = bluestore
-osd memory target = %d
-osd memory base = %d
-osd memory cache min = %d
-bluestore_block_size = %d
 
-[client.rgw.%s]
-rgw dns name = %s
-rgw enable usage log = true
-rgw usage log tick interval = 1
-rgw usage log flush threshold = 1
-rgw usage max shards = 32
-rgw usage max user shards = 1
-log file = /var/log/ceph/client.rgw.%s.log
-rgw frontends = %s endpoint=0.0.0.0:%s
 `
 
 	monMapPath            = "/etc/ceph/monmap"
@@ -71,6 +52,7 @@ rgw frontends = %s endpoint=0.0.0.0:%s
 	monListenIPPort       = monIP + ":" + monPort
 	rgwEngine             = "beast"
 	monPort               = "3300"
+	osdPoolDefaultSize    = "1"
 )
 
 var (
@@ -192,7 +174,8 @@ func monMkfs(hostname, monInitialKeyringPath, monDataPath, monMapPath string) {
 func monStart(hostname, monDataPath string) {
 	log.Println("init mon: running monitor")
 
-	cmd := exec.Command("ceph-mon", "--setuser", "ceph", "--setgroup", "ceph", "-i", hostname, "--mon-data", monDataPath, "--public-addr", monListenIPPort)
+	cmd := exec.Command("ceph-mon", "--setuser", "ceph", "--setgroup", "ceph", "-i", hostname, "--mon-data", monDataPath, "--public-addr", monListenIPPort, "--mon-initial-members", hostname,
+		"--osd-pool-default-size", osdPoolDefaultSize)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

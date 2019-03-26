@@ -89,10 +89,7 @@ func generateUUID() string {
 
 func generateCephConf(hostname, rgwEngine, rgwPort string) (string, string) {
 	fsid := generateUUID()
-	memAvailable := getAvailableRAM()
-	osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin := tuneMemory(memAvailable)
-
-	return fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, hostname, hostname, hostname, rgwEngine, rgwPort), fsid
+	return fmt.Sprintf(cephConfTemplate, fsid), fsid
 }
 
 func writeCephConf(hostname, cephConfFilePath string) string {
@@ -344,25 +341,25 @@ func tuneMemory(memAvailable uint64) (osdMemoryTarget uint64, osdMemoryBase uint
 	_128mB := mbTob(128)
 	_4096mB := mbTob(4096)
 
-	log.Printf("init mon: found %dMB of RAM available.\n", bToMb(memAvailable))
+	log.Printf("init osd: found %dMB of RAM available.\n", bToMb(memAvailable))
 
 	if memAvailable > _4096mB {
-		log.Println("init mon: more than 4GB of RAM is available. Caping OSD memory usage to 4GB.")
+		log.Println("init osd: more than 4GB of RAM is available. Caping OSD memory usage to 4GB.")
 		memAvailable = _4096mB
 	}
 
 	osdMemoryTarget = memAvailable - _50mB
 	if osdMemoryTarget < _128mB {
-		log.Fatalf("init mon: something strange is going on, I should have enough memory but osd_memory_target is too small: %dMB, cannot tune.\n", bToMb(osdMemoryTarget))
+		log.Fatalf("init osd: something strange is going on, I should have enough memory but osd_memory_target is too small: %dMB, cannot tune.\n", bToMb(osdMemoryTarget))
 	}
 
 	osdMemoryBase = memAvailable / 2
 	if osdMemoryBase < _128mB {
-		log.Fatalf("init mon: something strange is going on, I should have enough memory but  osd_memory_base is too small: %dMB, cannot tune.\n", bToMb(osdMemoryBase))
+		log.Fatalf("init osd: something strange is going on, I should have enough memory but  osd_memory_base is too small: %dMB, cannot tune.\n", bToMb(osdMemoryBase))
 	}
 
 	osdMemoryCacheMin = ((osdMemoryTarget-osdMemoryBase)/2 + osdMemoryBase)
-	log.Printf("init mon: tuning osd memory consumption with osd_memory_target: %dMB, osd_memory_base: %dMB and osd_memory_cache_min: %dMB.\n", bToMb(osdMemoryTarget), bToMb(osdMemoryBase), bToMb(osdMemoryCacheMin))
+	log.Printf("init osd: tuning osd memory consumption with osd_memory_target: %dMB, osd_memory_base: %dMB and osd_memory_cache_min: %dMB.\n", bToMb(osdMemoryTarget), bToMb(osdMemoryBase), bToMb(osdMemoryCacheMin))
 
 	return osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin
 }
