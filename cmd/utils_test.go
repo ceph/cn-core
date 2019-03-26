@@ -42,40 +42,16 @@ func TestGenerateUUID(t *testing.T) {
 
 func TestGenerateCephConf(t *testing.T) {
 	fsid := "7ff73783-cec6-4ace-b655-a6bc4f2532a8"
-	hostname := "toto"
-	osdMemoryTarget := 1
-	osdMemoryBase := 2
-	osdMemoryCacheMin := 3
-	bluestoreSizeMin := 4
 	expectedCephConf := `
 [global]
 fsid = 7ff73783-cec6-4ace-b655-a6bc4f2532a8
-mon initial members = toto
 mon host = [v2:127.0.0.1:3300,v1:127.0.0.1:6789]
-osd crush chooseleaf type = 0
-osd journal size = 100
 public network = 0.0.0.0/0
 cluster network = 0.0.0.0/0
 log file = /dev/null
-osd pool default size = 1
-osd data = /var/lib/ceph/osd/ceph-0
-osd objectstore = bluestore
-osd memory target = 1
-osd memory base = 2
-osd memory cache min = 3
-bluestore_block_size = 4
 
-[client.rgw.toto]
-rgw dns name = toto
-rgw enable usage log = true
-rgw usage log tick interval = 1
-rgw usage log flush threshold = 1
-rgw usage max shards = 32
-rgw usage max user shards = 1
-log file = /var/log/ceph/client.rgw.toto.log
-rgw frontends = beast endpoint=0.0.0.0:8000
 `
-	assert.Equal(t, expectedCephConf, fmt.Sprintf(cephConfTemplate, fsid, hostname, osdMemoryTarget, osdMemoryBase, osdMemoryCacheMin, bluestoreSizeMin, hostname, hostname, hostname, rgwEngine, rgwPort), "Ceph configuration file generation error!")
+	assert.Equal(t, expectedCephConf, fmt.Sprintf(cephConfTemplate, fsid), "Ceph configuration file generation error!")
 }
 
 func TestValidateAvaibleMemory(t *testing.T) {

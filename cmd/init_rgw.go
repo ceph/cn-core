@@ -31,8 +31,13 @@ import (
 )
 
 const (
-	cnUserDetailsFile = "/opt/ceph-container/tmp/cn_user_details"
-	s3CmdFilePath     = "/root/.s3cfg"
+	cnUserDetailsFile         = "/opt/ceph-container/tmp/cn_user_details"
+	s3CmdFilePath             = "/root/.s3cfg"
+	rgwEnableUsageLog         = "true"
+	rgwUsageLogTickInterval   = "1"
+	rgwUsageLogFlushThreshold = "1"
+	rgwUsageMaxShards         = "32"
+	rgwUsageMaxUserShards     = "1"
 )
 
 func bootstrapRgw() {
@@ -123,8 +128,18 @@ func generateRgwKeyring(hostname, rgwKeyringPath string) {
 
 func rgwStart(hostname, rgwKeyringPath string) {
 	log.Println("init rgw: running rgw on port " + rgwPort)
-
-	cmd := exec.Command("radosgw", "--setuser", "ceph", "--setgroup", "ceph", "-n", "client.rgw."+hostname, "-k", rgwKeyringPath)
+	rgwDNSName := hostname
+	rgwLogFile := "/var/log/ceph/client.rgw." + hostname + ".log"
+	rgwFrontends := rgwEngine + " endpoint=0.0.0.0:" + rgwPort
+	cmd := exec.Command("radosgw", "--setuser", "ceph", "--setgroup", "ceph", "-n", "client.rgw."+hostname, "-k", rgwKeyringPath,
+		"--rgw-dns-name", rgwDNSName,
+		"--rgw-enable-usage-log", rgwEnableUsageLog,
+		"--rgw-usage-log-tick-interval", rgwUsageLogTickInterval,
+		"--rgw-usage-log-flush-threshold", rgwUsageLogFlushThreshold,
+		"--rgw-usage-max-shards", rgwUsageMaxShards,
+		"--rgw-usage-max-user-shards", rgwUsageMaxUserShards,
+		"--log-file", rgwLogFile,
+		"--rgw-frontends", rgwFrontends)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
