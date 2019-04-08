@@ -19,7 +19,7 @@
 # more information refer https://golang.org/doc/go1.4#canonicalimports
 #
 
-FROM ceph/daemon:latest-master
+FROM ceph/daemon:v4.0.0-stable-4.0-nautilus-centos-7-x86_64
 
 ADD cn-core /usr/local/bin/
 
