@@ -70,16 +70,17 @@ func mgrPreReq(mgrDataPath, monKeyringPath string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		out, args, err := fetchAdminKeyring(monKeyringPath)
-		if err != nil {
-			fmt.Printf("The command was: %s\n", args)
-			fmt.Printf("The error was: %s\n", out)
-			log.Fatal(err)
-		}
-		err = os.Chown(adminKeyringPath, cephUID, cephGID)
-		if err != nil {
-			log.Fatal(err)
-		}
+	}
+
+	out, args, err := fetchAdminKeyring(monKeyringPath)
+	if err != nil {
+		fmt.Printf("The command was: %s\n", args)
+		fmt.Printf("The error was: %s\n", out)
+		log.Fatal(err)
+	}
+	err = os.Chown(adminKeyringPath, cephUID, cephGID)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
