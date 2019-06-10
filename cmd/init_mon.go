@@ -66,6 +66,11 @@ func bootstrapMon() {
 	}
 
 	// Read ENV and search for a value for rgwPort
+	if rgwPortEnv := os.Getenv("RGW_FRONTEND_PORT"); rgwPortEnv != "" {
+		rgwPort = rgwPortEnv
+	}
+
+	// Keep this for backward compatiblity, the option is gone since https://github.com/ceph/ceph-container/pull/1356
 	rgwPortEnv := os.Getenv("RGW_CIVETWEB_PORT")
 	if len(rgwPortEnv) > 0 {
 		rgwPort = rgwPortEnv
