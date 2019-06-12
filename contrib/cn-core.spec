@@ -1,4 +1,4 @@
-%global source_version 0.6
+%global source_version 0.7
 %global tag 1
 %global provider        github
 %global provider_tld    com
@@ -52,6 +52,10 @@ install -D -p -m 644 cn-core.toml %{buildroot}%{_sysconfdir}/cn/
 %{_sysconfdir}/cn/cn-core.toml
 
 %changelog
+* Wed Jun 12 2019  Sebastien Han <seb@redhat.com> - 0.7-1
+- mon: add RGW_FRONTEND_PORT variable
+- mgr: always fetch admin keyring
+- Packaging: Update specfile version to v0.6
 * Wed Apr 10 2019  Sebastien Han <seb@redhat.com> - 0.6-1
 - config: shrink ceph.conf
 - contrib: adds latest tag
