@@ -31,10 +31,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type fn func()
+
 var (
-	daemon           string
+	daemons          string
 	dashExposedIP    string
 	validValueDaemon = []string{"mon", "mgr", "osd", "rgw", "dash", "health"}
+	bootstrapMap     = map[string]fn{
+		"mon":  bootstrapMon,
+		"mgr":  bootstrapMgr,
+		"osd":  bootstrapOsd,
+		"rgw":  bootstrapRgw,
+		"dash": bootstrapSree,
+	}
 )
 
 const (
@@ -53,7 +62,7 @@ func cliInitCluster() *cobra.Command {
 			"cn-core init --daemon mon \n",
 	}
 	cmd.Flags().SortFlags = false
-	cmd.Flags().StringVarP(&daemon, "daemon", "d", "", "Specify which daemon to bootstrap. Valid choices are: "+strings.Join(validValueDaemon, ", ")+".")
+	cmd.Flags().StringVarP(&daemons, "daemon", "d", "", "Specify which daemon to bootstrap. Valid choices are: "+strings.Join(validValueDaemon, ", ")+".")
 	cmd.Flags().StringVar(&rgwPort, "rgw-port", rgwPort, "Specify binding port for Rados Gateway.")
 	cmd.Flags().StringVar(&dashPort, "dash-port", dashPort, "Specify binding port for Sree dashboard.")
 	cmd.Flags().StringVar(&dashExposedIP, "dash-exposed-ip", dashExposedIP, "Specify binding port for Sree dashboard.")
@@ -76,38 +85,37 @@ func initCluster(cmd *cobra.Command, args []string) {
 			log.Fatal(err)
 		}
 	}
-
-	switch daemon {
-	case "mon":
-		bootstrapMon()
-	case "mgr":
-		bootstrapMgr()
-	case "osd":
-		bootstrapOsd()
-	case "rgw":
-		bootstrapRgw()
-	case "dash":
-		bootstrapSree()
-	case "health":
-		err := cephHealth()
-		if err != nil {
-			log.Fatal(err)
+	daemonsList := strings.Split(daemons, ",")
+	if len(daemonsList) > 0 && daemonsList[0] != "" {
+		for i := 0; i < len(validValueDaemon); i++ {
+			for j := 0; j < len(daemonsList); j++ {
+				if daemonsList[j] == validValueDaemon[i] {
+					if daemonsList[j] == "health" {
+						err := cephHealth()
+						if err != nil {
+							log.Fatal(err)
+						}
+					} else {
+						if daemonsList[j] != "" {
+							bootstrapMap[daemonsList[j]]()
+						}
+					}
+				}
+			}
 		}
-	default:
+	} else {
 		log.Printf("init: no daemon was selected. Deploying %s.\n", strings.Join(validValueDaemon, ", "))
 		bootstrapMon()
 		bootstrapMgr()
 		bootstrapOsd()
 		bootstrapRgw()
 		bootstrapSree()
-
-		// This makes cn happy when looking for the container status
-		fmt.Println("SUCCESS")
-
 		// bootstrap is done, now watching ceph status
 		err := cephHealth()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+	// This makes cn happy when looking for the container status
+	fmt.Println("SUCCESS")
 }
