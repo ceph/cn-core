@@ -19,8 +19,9 @@
 # more information refer https://golang.org/doc/go1.4#canonicalimports
 #
 
-FROM ceph/daemon:v4.0.0-stable-4.0-nautilus-centos-7-x86_64
+FROM ceph/ceph:v15.2.4
 
 ADD cn-core /usr/local/bin/
+ADD s3cfg /root/.s3cfg
 
 ENTRYPOINT ["/usr/local/bin/cn-core", "init"]

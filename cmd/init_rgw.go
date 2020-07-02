@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	cnUserDetailsFile         = "/opt/ceph-container/tmp/cn_user_details"
+	cnUserDetailsFile         = "/tmp/cn_user_details"
 	s3CmdFilePath             = "/root/.s3cfg"
 	rgwEnableUsageLog         = "true"
 	rgwUsageLogTickInterval   = "1"
