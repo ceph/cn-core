@@ -1,3 +1,5 @@
+# /!\ This project is not maintained anymore. It was an experiment that never made it into ceph-nano. /!\ 
+
 # cn-core
 
 `cn-core` replaces the `demo.sh` scenario of the ceph-container project for a faster bootstrap time, better test coverage and error handling.
